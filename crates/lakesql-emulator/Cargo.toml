@@ -1,0 +1,17 @@
+[package]
+name = "lakesql-emulator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lakesql-core = { path = "../lakesql-core" }
+lakesql-parser = { path = "../lakesql-parser" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+async-trait = "0.1"
+
+# For persistent storage
+sled = { workspace = true }

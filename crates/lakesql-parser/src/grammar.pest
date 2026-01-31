@@ -1,0 +1,178 @@
+// Lake Formation DDL Grammar
+// This defines the complete syntax for our Lake Formation SQL extension
+
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+COMMENT = _{ ("--" ~ (!"\n" ~ ANY)*) | ("/*" ~ (!"*/" ~ ANY)* ~ "*/") }
+
+// Keywords (case insensitive)
+grant = { ^"GRANT" }
+revoke = { ^"REVOKE" }
+create = { ^"CREATE" }
+drop = { ^"DROP" }
+alter = { ^"ALTER" }
+on = { ^"ON" }
+to = { ^"TO" }
+from = { ^"FROM" }
+with = { ^"WITH" }
+option = { ^"OPTION" }
+role = { ^"ROLE" }
+user = { ^"USER" }
+group = { ^"GROUP" }
+database = { ^"DATABASE" }
+table = { ^"TABLE" }
+tag = { ^"TAG" }
+values = { ^"VALUES" }
+where = { ^"WHERE" }
+session_context = { ^"SESSION_CONTEXT" }
+external_account = { ^"EXTERNAL_ACCOUNT" }
+data_location_access = { ^"DATA_LOCATION_ACCESS" }
+tagged = { ^"TAGGED" }
+resources = { ^"RESOURCES" }
+
+// Identifiers and literals
+identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+quoted_identifier = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+string_literal = @{ "'" ~ (!"'" ~ ANY)* ~ "'" }
+s3_path = @{ "s3://" ~ (!(" " | "\t" | "\n" | "'") ~ ANY)* }
+
+// Principals
+principal = {
+    role_principal |
+    user_principal |
+    group_principal |
+    external_account_principal |
+    tagged_principal
+}
+
+role_principal = { role ~ identifier }
+user_principal = { user ~ string_literal }
+group_principal = { group ~ string_literal }
+external_account_principal = { external_account ~ string_literal }
+tagged_principal = { principal_with_tags }
+
+principal_with_tags = {
+    (role | user | group) ~ identifier ~ 
+    tagged ~ tag_conditions
+}
+
+// Resources
+resource = {
+    database_resource |
+    table_resource |
+    data_location_resource |
+    tagged_resource_match
+}
+
+database_resource = { database ~ identifier }
+
+table_resource = {
+    identifier ~ "." ~ identifier ~ column_list? |
+    identifier ~ "." ~ "*"
+}
+
+column_list = { "(" ~ column_name ~ ("," ~ column_name)* ~ ")" }
+column_name = { identifier | quoted_identifier }
+
+data_location_resource = { string_literal | s3_path }
+
+tagged_resource_match = { resources ~ tagged ~ tag_conditions }
+
+// Tag conditions
+tag_conditions = { tag_condition ~ ("," ~ tag_condition)* }
+tag_condition = { identifier ~ "=" ~ tag_value_list }
+tag_value_list = { 
+    tag_value |
+    "(" ~ tag_value ~ ("," ~ tag_value)* ~ ")"
+}
+tag_value = { string_literal | identifier }
+
+// Actions/Permissions  
+action_list = { action ~ ("," ~ action)* }
+action = {
+    ^"SELECT" | ^"INSERT" | ^"UPDATE" | ^"DELETE" |
+    ^"CREATE_TABLE" | ^"DROP_TABLE" | ^"ALTER_TABLE" | 
+    ^"DESCRIBE" | ^"DATA_LOCATION_ACCESS"
+}
+
+// Row-level filters
+row_filter = { where ~ filter_expression }
+filter_expression = {
+    filter_term ~ (logical_op ~ filter_term)*
+}
+filter_term = {
+    column_reference ~ comparison_op ~ value |
+    column_reference ~ comparison_op ~ session_context_ref |
+    "(" ~ filter_expression ~ ")"
+}
+
+column_reference = { identifier ~ ("." ~ identifier)* }
+session_context_ref = { session_context ~ "(" ~ string_literal ~ ")" }
+comparison_op = { "=" | "!=" | "<>" | "<" | ">" | "<=" | ">=" | ^"LIKE" }
+logical_op = { ^"AND" | ^"OR" }
+value = { string_literal | number | ^"NULL" }
+number = @{ "-"? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
+
+// DDL Statements
+ddl_statement = {
+    grant_statement |
+    revoke_statement |
+    create_role_statement |
+    create_tag_statement |
+    drop_role_statement |
+    drop_tag_statement |
+    show_statement
+}
+
+// GRANT statement
+grant_statement = {
+    grant ~ action_list ~ on ~ resource ~ to ~ principal ~ 
+    (with ~ grant ~ option)? ~ row_filter?
+}
+
+// REVOKE statement  
+revoke_statement = {
+    revoke ~ action_list ~ on ~ resource ~ from ~ principal
+}
+
+// CREATE ROLE statement
+create_role_statement = {
+    create ~ role ~ identifier
+}
+
+// CREATE TAG statement
+create_tag_statement = {
+    create ~ tag ~ identifier ~ values ~ "(" ~ string_list ~ ")"
+}
+
+string_list = { string_literal ~ ("," ~ string_literal)* }
+
+// DROP statements
+drop_role_statement = {
+    drop ~ role ~ identifier
+}
+
+drop_tag_statement = {
+    drop ~ tag ~ identifier  
+}
+
+// SHOW statements (for introspection)
+show_statement = {
+    show_permissions_statement |
+    show_roles_statement |
+    show_tags_statement
+}
+
+show_permissions_statement = {
+    ^"SHOW" ~ ^"PERMISSIONS" ~ (^"FOR" ~ principal)?
+}
+
+show_roles_statement = {
+    ^"SHOW" ~ ^"ROLES"
+}
+
+show_tags_statement = {
+    ^"SHOW" ~ ^"TAGS"
+}
+
+// Root rule
+program = { SOI ~ ddl_statement ~ EOI }

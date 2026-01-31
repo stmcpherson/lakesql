@@ -1,0 +1,13 @@
+[package]
+name = "lakesql-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lakesql-core = { path = "../lakesql-core" }
+lakesql-parser = { path = "../lakesql-parser" }
+lakesql-emulator = { path = "../lakesql-emulator" }
+tokio = { workspace = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }

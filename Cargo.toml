@@ -1,0 +1,43 @@
+[workspace]
+members = [
+    "crates/lakesql-core",
+    "crates/lakesql-parser", 
+    "crates/lakesql-emulator",
+    "crates/lakesql-aws",
+    "crates/lakesql-wasm",
+    "crates/lakesql-cli"
+]
+resolver = "2"
+
+[workspace.dependencies]
+# Core dependencies we'll use across crates
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+
+# Parser dependencies
+pest = "2.7"
+pest_derive = "2.7"
+
+# WASM dependencies  
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+
+# AWS dependencies
+aws-sdk-lakeformation = "1.0"
+aws-config = "1.0"
+
+# CLI dependencies
+clap = { version = "4.5", features = ["derive"] }
+
+# Storage for emulator
+sled = "0.34"
+
+[profile.release]
+# Optimize for size for WASM builds
+opt-level = "s"
+lto = true
+codegen-units = 1

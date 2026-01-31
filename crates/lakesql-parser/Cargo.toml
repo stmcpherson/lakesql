@@ -1,0 +1,11 @@
+[package]
+name = "lakesql-parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lakesql-core = { path = "../lakesql-core" }
+pest = { workspace = true }
+pest_derive = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
