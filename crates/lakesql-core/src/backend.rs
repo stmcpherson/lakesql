@@ -128,19 +128,34 @@ impl LakeFormationBackend for PlaceholderBackend {
     }
 }
 
+#[cfg(feature = "emulator")]
 pub async fn create_emulator_backend(
     state_file: Option<String>
 ) -> Result<impl LakeFormationBackend> {
-    // This function will be properly implemented when lakesql-emulator is integrated
-    // For now, return placeholder to keep compilation working
-    Ok(PlaceholderBackend)
+    lakesql_emulator::EmulatorBackend::new(state_file).await
 }
 
+#[cfg(not(feature = "emulator"))]
+pub async fn create_emulator_backend(
+    _state_file: Option<String>
+) -> Result<PlaceholderBackend> {
+    Err(anyhow!("Emulator backend not compiled - enable 'emulator' feature"))
+}
+
+#[cfg(feature = "aws")]
+pub async fn create_aws_backend(
+    region: Option<String>,
+    profile: Option<String>, 
+    endpoint: Option<String>
+) -> Result<impl LakeFormationBackend> {
+    lakesql_aws::create_aws_backend(region, profile, endpoint).await
+}
+
+#[cfg(not(feature = "aws"))]
 pub async fn create_aws_backend(
     _region: Option<String>,
     _profile: Option<String>, 
     _endpoint: Option<String>
 ) -> Result<PlaceholderBackend> {
-    // This will be implemented in lakesql-aws crate
-    Ok(PlaceholderBackend)
+    Err(anyhow!("AWS backend not compiled - enable 'aws' feature"))
 }
