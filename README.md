@@ -336,7 +336,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📚 **Documentation**: Check the `/docs` directory
 - 🐛 **Issues**: Report bugs on GitHub Issues
 - 💬 **Discussions**: Join GitHub Discussions
-- 📧 **Contact**: steve@lunarlabs.com
 
 ---
 
