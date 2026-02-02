@@ -1,6 +1,6 @@
 # LakeSQL
 
-A comprehensive Lake Formation DDL client with SQL-like syntax for managing AWS data lake permissions and resources.
+A Lake Formation DDL client with SQL-like syntax for managing AWS data lake permissions and resources.
 
 [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
