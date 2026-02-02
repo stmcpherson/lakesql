@@ -1,4 +1,4 @@
-# LakeSQL 🦀
+# LakeSQL
 
 A comprehensive Lake Formation DDL client with SQL-like syntax for managing AWS data lake permissions and resources.
 
@@ -339,4 +339,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ and 🦀 by the LunarLabs team**
+**Built with ❤️by the LunarLabs team**
