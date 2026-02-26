@@ -3,7 +3,7 @@
 //! In-memory implementation of Lake Formation DDL operations.
 //! Perfect for local development and testing.
 
-use lakesql_core::*;
+use lakesql_types::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -65,10 +65,33 @@ impl EmulatorBackend {
             engine: EmulatorEngine::new(),
         };
 
-        // Load existing state if file exists
+        // Load existing state if file exists and is non-empty/valid
+        let verbose = std::env::var("LAKESQL_VERBOSE").is_ok();
         if let Some(ref file_path) = state_file {
             if Path::new(file_path).exists() {
-                backend.load_state(file_path).await?;
+                match tokio::fs::read_to_string(file_path).await {
+                    Ok(content) if !content.trim().is_empty() => {
+                        match serde_json::from_str(&content) {
+                            Ok(state) => {
+                                backend.state = state;
+                                backend.engine.update_state(&backend.state);
+                                if verbose {
+                                    println!("📂 Loaded emulator state from: {}", file_path);
+                                }
+                            },
+                            Err(_) => {
+                                if verbose {
+                                    println!("⚠️ State file invalid, starting with empty state");
+                                }
+                            }
+                        }
+                    },
+                    _ => {
+                        if verbose {
+                            println!("⚠️ State file empty, starting with empty state");
+                        }
+                    }
+                }
             }
         }
 
@@ -310,6 +333,90 @@ impl LakeFormationBackend for EmulatorBackend {
 
 #[cfg(test)]
 mod tests {
+    #[tokio::test]
+    async fn test_backend_integration_consistency() {
+        let mut backend = EmulatorBackend::new(None).await.unwrap();
+
+        // Simulate AWS-like scenario: grant permission to external account
+        let permission = Permission {
+            principal: Principal::ExternalAccount("accountB".to_string()),
+            resource: Resource::Table {
+                database: "sales".to_string(),
+                table: "orders".to_string(),
+                columns: None,
+            },
+            actions: vec![Action::Select],
+            grant_option: false,
+            row_filter: None,
+        };
+        backend.grant_permissions(permission).await.unwrap();
+
+        // Should allow access for accountB
+        let allowed = backend.check_permissions(
+            &Principal::ExternalAccount("accountB".to_string()),
+            &Resource::Table {
+                database: "sales".to_string(),
+                table: "orders".to_string(),
+                columns: None,
+            },
+            &Action::Select,
+        ).await.unwrap();
+        assert!(allowed);
+
+        // Should deny access for accountA
+        let denied = backend.check_permissions(
+            &Principal::ExternalAccount("accountA".to_string()),
+            &Resource::Table {
+                database: "sales".to_string(),
+                table: "orders".to_string(),
+                columns: None,
+            },
+            &Action::Select,
+        ).await.unwrap();
+        assert!(!denied);
+    }
+    #[tokio::test]
+    async fn test_column_level_security() {
+        let mut backend = EmulatorBackend::new(None).await.unwrap();
+
+        // Grant permission to user for specific columns
+        let permission = Permission {
+            principal: Principal::User("bob@company.com".to_string()),
+            resource: Resource::Table {
+                database: "sales".to_string(),
+                table: "orders".to_string(),
+                columns: Some(vec!["customer_id".to_string(), "amount".to_string()]),
+            },
+            actions: vec![Action::Select],
+            grant_option: false,
+            row_filter: None,
+        };
+        backend.grant_permissions(permission).await.unwrap();
+
+        // Should allow access to permitted columns
+        let allowed = backend.check_permissions(
+            &Principal::User("bob@company.com".to_string()),
+            &Resource::Table {
+                database: "sales".to_string(),
+                table: "orders".to_string(),
+                columns: Some(vec!["customer_id".to_string()]),
+            },
+            &Action::Select,
+        ).await.unwrap();
+        assert!(allowed);
+
+        // Should deny access to non-permitted columns
+        let denied = backend.check_permissions(
+            &Principal::User("bob@company.com".to_string()),
+            &Resource::Table {
+                database: "sales".to_string(),
+                table: "orders".to_string(),
+                columns: Some(vec!["status".to_string()]),
+            },
+            &Action::Select,
+        ).await.unwrap();
+        assert!(!denied);
+    }
     use super::*;
 
     #[tokio::test]

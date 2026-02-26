@@ -1,6 +1,6 @@
 //! Expression evaluation engine for row-level security filters
 
-use lakesql_core::*;
+use lakesql_types::*;
 use std::collections::HashMap;
 use anyhow::{Result, anyhow};
 
@@ -49,29 +49,28 @@ impl ExpressionEvaluator {
             expr
         };
 
-        // Handle simple comparisons: column = value
-        if let Some((left, right)) = self.split_comparison(expr, "=") {
-            return self.evaluate_equals(left.trim(), right.trim());
+        // Handle logical operators (AND, OR) first
+        if expr.contains(" AND ") {
+            return self.evaluate_logical_and(expr);
+        }
+        if expr.contains(" OR ") {
+            return self.evaluate_logical_or(expr);
         }
 
-        // Handle inequalities  
+        // Handle inequalities
         if let Some((left, right)) = self.split_comparison(expr, "!=") {
             let equals = self.evaluate_equals(left.trim(), right.trim())?;
             return Ok(!equals);
         }
 
+        // Handle simple comparisons: column = value
+        if let Some((left, right)) = self.split_comparison(expr, "=") {
+            return self.evaluate_equals(left.trim(), right.trim());
+        }
+
         // Handle SESSION_CONTEXT calls
         if expr.contains("SESSION_CONTEXT") {
             return self.evaluate_session_context_expression(expr);
-        }
-
-        // Handle logical operators (AND, OR)
-        if expr.contains(" AND ") {
-            return self.evaluate_logical_and(expr);
-        }
-        
-        if expr.contains(" OR ") {
-            return self.evaluate_logical_or(expr);
         }
 
         // Default: try to evaluate as boolean literal

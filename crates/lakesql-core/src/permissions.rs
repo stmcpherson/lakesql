@@ -1,6 +1,6 @@
 //! Permission management and evaluation logic
 
-use crate::types::*;
+use lakesql_types::*;
 use std::collections::{HashMap, HashSet};
 use anyhow::Result;
 

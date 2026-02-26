@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+lakesql-types = { path = "../lakesql-types" }
 lakesql-core = { path = "../lakesql-core" }
 pest = { workspace = true }
 pest_derive = { workspace = true }

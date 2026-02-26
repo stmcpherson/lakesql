@@ -1,4 +1,5 @@
-//! Persistent storage for the Lake Formation emulator
+use lakesql_types::{Principal, Resource};
+/// Persistent storage for the Lake Formation emulator
 
 use crate::EmulatorState;
 use anyhow::Result;
@@ -82,18 +83,18 @@ impl StateExporter {
                 .join(", ");
 
             let principal_str = match &permission.principal {
-                lakesql_core::Principal::Role(name) => format!("ROLE {}", name),
-                lakesql_core::Principal::User(name) => format!("USER '{}'", name),
-                lakesql_core::Principal::SamlGroup(name) => format!("GROUP '{}'", name),
-                lakesql_core::Principal::ExternalAccount(account) => format!("EXTERNAL_ACCOUNT '{}'", account),
-                lakesql_core::Principal::TaggedPrincipal { tag_key, tag_values } => {
+                Principal::Role(name) => format!("ROLE {}", name),
+                Principal::User(name) => format!("USER '{}'", name),
+                Principal::SamlGroup(name) => format!("GROUP '{}'", name),
+                Principal::ExternalAccount(account) => format!("EXTERNAL_ACCOUNT '{}'", account),
+                Principal::TaggedPrincipal { tag_key, tag_values } => {
                     format!("TAGGED {}='{}'", tag_key, tag_values.join(","))
                 },
             };
 
             let resource_str = match &permission.resource {
-                lakesql_core::Resource::Database { name } => format!("DATABASE {}", name),
-                lakesql_core::Resource::Table { database, table, columns } => {
+                Resource::Database { name } => format!("DATABASE {}", name),
+                Resource::Table { database, table, columns } => {
                     if let Some(cols) = columns {
                         let cols_str = cols.join(", ");
                         format!("{}.{}({})", database, table, cols_str)
@@ -101,8 +102,8 @@ impl StateExporter {
                         format!("{}.{}", database, table)
                     }
                 },
-                lakesql_core::Resource::DataLocation { path } => format!("'{}'", path),
-                lakesql_core::Resource::TaggedResource { tag_conditions } => {
+                Resource::DataLocation { path } => format!("'{}'", path),
+                Resource::TaggedResource { tag_conditions } => {
                     let conditions_str = tag_conditions
                         .iter()
                         .map(|(k, vs)| format!("{}='{}'", k, vs.join(",")))

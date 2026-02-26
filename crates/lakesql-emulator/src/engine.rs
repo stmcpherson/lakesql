@@ -1,6 +1,6 @@
 //! Permission evaluation engine for the Lake Formation emulator
 
-use lakesql_core::*;
+use lakesql_types::*;
 use crate::{EmulatorState, expression::ExpressionEvaluator};
 use std::collections::HashMap;
 

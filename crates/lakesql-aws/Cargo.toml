@@ -5,20 +5,14 @@ edition = "2021"
 description = "AWS Lake Formation backend for LakeSQL"
 
 [dependencies]
-# Workspace dependencies
+lakesql-types = { path = "../lakesql-types" }
 lakesql-core = { path = "../lakesql-core" }
 lakesql-parser = { path = "../lakesql-parser" }
-
-# Core async/error handling
 tokio = { workspace = true }
 anyhow = { workspace = true }
 async-trait = { workspace = true }
-
-# AWS SDK
 aws-config = "1.0"
 aws-sdk-lakeformation = "1.0"
-
-# Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
 

@@ -1,3 +1,4 @@
+use lakesql_types::{Principal, Resource, Action, RowFilter, Permission, DdlResult, LakeFormationBackend};
 use lakesql_core::*;
 use lakesql_emulator::EmulatorBackend;
 use clap::{Parser, Subcommand};
@@ -51,9 +52,15 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    use std::env;
     let cli = Cli::parse();
 
-    let mut backend = EmulatorBackend::new(cli.state_file).await?;
+    // Use a temp file for state if not provided, to persist across invocations in tests
+    let state_file = cli.state_file.clone().or_else(|| {
+        env::var("LAKESQL_TEST_STATE_FILE").ok()
+    });
+
+    let mut backend = EmulatorBackend::new(state_file).await?;
 
     match cli.command {
         Commands::Execute { sql } => {
@@ -90,8 +97,9 @@ async fn main() -> Result<()> {
 }
 
 async fn execute_statement(backend: &mut EmulatorBackend, sql: &str) -> Result<()> {
+    use std::process;
     println!("🔧 Executing: {}", sql);
-    
+
     match backend.execute_ddl(sql).await {
         Ok(result) => {
             match result {
@@ -100,6 +108,7 @@ async fn execute_statement(backend: &mut EmulatorBackend, sql: &str) -> Result<(
                 },
                 DdlResult::Error { error } => {
                     println!("❌ Error: {}", error);
+                    process::exit(1);
                 },
                 DdlResult::PermissionCheck { allowed, reason } => {
                     println!("🔍 Permission Check: {} ({})", 
@@ -111,9 +120,10 @@ async fn execute_statement(backend: &mut EmulatorBackend, sql: &str) -> Result<(
         },
         Err(e) => {
             println!("❌ Execution failed: {}", e);
+            process::exit(1);
         }
     }
-    
+
     Ok(())
 }
 

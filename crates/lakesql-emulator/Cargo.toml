@@ -1,10 +1,12 @@
+[dev-dependencies]
+tempfile = "3"
 [package]
 name = "lakesql-emulator"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-lakesql-core = { path = "../lakesql-core" }
+lakesql-types = { path = "../lakesql-types" }
 lakesql-parser = { path = "../lakesql-parser" }
 serde = { workspace = true }
 serde_json = { workspace = true }

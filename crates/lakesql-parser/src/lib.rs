@@ -5,7 +5,7 @@
 use pest::Parser;
 use pest_derive::Parser;
 use anyhow::{Result, anyhow};
-use lakesql_core::types::*;
+use lakesql_types::{Action, Resource, Principal, RowFilter, Permission};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]

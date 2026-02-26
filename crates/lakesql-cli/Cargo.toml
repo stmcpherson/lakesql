@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+lakesql-types = { path = "../lakesql-types" }
 lakesql-core = { path = "../lakesql-core" }
 lakesql-parser = { path = "../lakesql-parser" }
 lakesql-emulator = { path = "../lakesql-emulator" }
@@ -11,3 +12,8 @@ tokio = { workspace = true }
 clap = { workspace = true }
 anyhow = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.10"

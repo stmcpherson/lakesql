@@ -4,18 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = { workspace = true }
-serde_json = { workspace = true }
 anyhow = { workspace = true }
-thiserror = { workspace = true }
-async-trait = "0.1"
-
-# Optional AWS backend
-lakesql-aws = { path = "../lakesql-aws", optional = true }
-lakesql-emulator = { path = "../lakesql-emulator", optional = true }
+lakesql-types = { path = "../lakesql-types" }
+async-trait = { workspace = true }
 
 [features]
-default = ["emulator"]
-aws = ["lakesql-aws"]
-emulator = ["lakesql-emulator"]
-full = ["aws", "emulator"]
+default = []
+full = []
